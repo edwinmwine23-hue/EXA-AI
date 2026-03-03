@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - EXA AI</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .checkout-container {
+            padding: 4rem 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .checkout-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .checkout-grid {
+                grid-template-columns: 3fr 2fr;
+                align-items: start;
+            }
+        }
+
+        .checkout-section {
+            margin-bottom: 2rem;
+        }
+
+        .checkout-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Form elements */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (min-width: 600px) {
+            .form-row.cols-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .form-row.cols-3 {
+                grid-template-columns: 2fr 1fr 1fr;
+            }
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: white;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+
+        /* Payment Methods */
+        .payment-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .payment-method {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .payment-method.active {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .payment-method:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .payment-method.active:hover {
+            border-color: var(--primary);
+        }
+
+        /* Order Summary */
+        .summary-card {
+            position: sticky;
+            top: 2rem;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        /* Loading Overlay */
+        .checkout-processing {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+        }
+
+        .checkout-processing.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="dark-theme">
+
+    <!-- Simple Navbar -->
+    <nav class="navbar" style="position: relative;">
+        <div class="container nav-container justify-center">
+            <a href="index.html" class="logo">
+                <i data-lucide="bot" class="logo-icon"></i>
+                EXA <span>AI</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="checkout-container relative">
+        <div class="glow-blob blob-1" style="top: 10%; right: 20%; opacity: 0.15;"></div>
+
+        <div class="mb-8">
+            <a href="index.html#pricing" class="text-gray hover:text-white flex items-center gap-2 text-sm">
+                <i data-lucide="arrow-left" style="width: 16px;"></i> Back to pricing
+            </a>
+            <h1 class="text-3xl font-bold mt-4">Upgrade your plan</h1>
+        </div>
+
+        <div class="checkout-grid">
+            <!-- Left Column: Form -->
+            <div class="checkout-form-area glass-card relative">
+
+                <!-- Processing Overlay -->
+                <div class="checkout-processing" id="processingOverlay">
+                    <div class="spinner"></div>
+                    <h3 class="text-xl font-bold">Processing payment...</h3>
+                    <p class="text-gray mt-2 text-sm">Please do not close this window.</p>
+                </div>
+
+                <form id="checkoutForm">
+                    <!-- Billing Info -->
+                    <div class="checkout-section">
+                        <h2 class="checkout-title"><i data-lucide="user"></i> Billing Details</h2>
+                        <div class="form-row cols-2">
+                            <div>
+                                <label class="form-label">First name</label>
+                                <input type="text" class="form-input" required placeholder="Jane">
+                            </div>
+                            <div>
+                                <label class="form-label">Last name</label>
+                                <input type="text" class="form-input" required placeholder="Doe">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div>
+                                <label class="form-label">Email address</label>
+                                <input type="email" class="form-input" required placeholder="jane@company.com">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div>
+                                <label class="form-label">Company / Organization</label>
+                                <input type="text" class="form-input" placeholder="Optional">
+                            </div>
+                        </div>
+                        <div class="form-row cols-2">
+                            <div>
+                                <label class="form-label">Country</label>
+                                <select class="form-input">
+                                    <option>United States</option>
+                                    <option>United Kingdom</option>
+                                    <option>Canada</option>
+                                    <option>Australia</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">ZIP / Postal Code</label>
+                                <input type="text" class="form-input" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Info -->
+                    <div class="checkout-section mt-8">
+                        <h2 class="checkout-title"><i data-lucide="credit-card"></i> Payment Method</h2>
+
+                        <div class="payment-methods">
+                            <div class="payment-method active">
+                                <i data-lucide="credit-card"></i>
+                                <span class="text-sm font-medium">Card</span>
+                            </div>
+                            <div class="payment-method">
+                                <i data-lucide="smartphone"></i>
+                                <span class="text-sm font-medium">PayPal</span>
+                            </div>
+                            <div class="payment-method">
+                                <i data-lucide="building"></i>
+                                <span class="text-sm font-medium">Bank</span>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div>
+                                <label class="form-label">Card Number</label>
+                                <input type="text" class="form-input" required placeholder="0000 0000 0000 0000">
+                            </div>
+                        </div>
+                        <div class="form-row cols-3">
+                            <div style="grid-column: span 2;">
+                                <label class="form-label">Cardholder Name</label>
+                                <input type="text" class="form-input" required placeholder="Name on card">
+                            </div>
+                            <div>
+                                <label class="form-label">Expiry (MM/YY)</label>
+                                <input type="text" class="form-input" required placeholder="MM/YY">
+                            </div>
+                            <div>
+                                <label class="form-label">CVV</label>
+                                <input type="text" class="form-input" required placeholder="123">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-full shadow-glow py-3 mt-4 text-lg">
+                        <i data-lucide="lock" style="width: 18px; margin-right: 8px;"></i> Pay Securely
+                    </button>
+                    <p class="text-center text-xs text-gray mt-4 flex items-center justify-center gap-1">
+                        <i data-lucide="shield-check" style="width: 14px;"></i> Payments are secure and encrypted.
+                    </p>
+                </form>
+            </div>
+
+            <!-- Right Column: Summary -->
+            <div class="summary-card glass-card">
+                <h2 class="checkout-title border-b border-white/5 pb-4 mb-4">Order Summary</h2>
+
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="bg-indigo/20 text-primary p-3 rounded-lg">
+                        <i data-lucide="zap"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-lg" id="planNameDisplay">Pro Plan</div>
+                        <div class="text-sm text-gray">Billed monthly</div>
+                    </div>
+                </div>
+
+                <div class="summary-item">
+                    <span>Subtotal</span>
+                    <span id="subtotalDisplay">$49.00</span>
+                </div>
+                <div class="summary-item">
+                    <span>Tax (calc. at checkout)</span>
+                    <span>$0.00</span>
+                </div>
+
+                <div class="summary-total">
+                    <span>Total due today</span>
+                    <span id="totalDisplay">$49.00</span>
+                </div>
+
+                <div class="mt-8 text-sm text-gray bg-white/5 p-4 rounded-lg">
+                    <h4 class="font-bold text-white mb-2">What's included:</h4>
+                    <ul class="flex flex-col gap-2">
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="text-green w-4 h-4"></i> Up to
+                            5 AI Chatbots</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="text-green w-4 h-4"></i>
+                            10,000 messages/month</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="text-green w-4 h-4"></i>
+                            Advanced Analytics</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        lucide.createIcons();
+
+        // Simple script to read URL params and set pricing display
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const plan = params.get('plan');
+
+            const nameDisplay = document.getElementById('planNameDisplay');
+            const subtotal = document.getElementById('subtotalDisplay');
+            const total = document.getElementById('totalDisplay');
+
+            if (plan === 'starter') {
+                nameDisplay.textContent = 'Starter Plan';
+                subtotal.textContent = '$0.00';
+                total.textContent = '$0.00';
+                // Fast-track logic for free plan could go here
+            } else if (plan === 'business') {
+                nameDisplay.textContent = 'Business Plan';
+                subtotal.textContent = '$199.00';
+                total.textContent = '$199.00';
+            } else {
+                // Default to pro
+                nameDisplay.textContent = 'Pro Plan';
+            }
+
+            // Payment simulation
+            const checkoutForm = document.getElementById('checkoutForm');
+            const overlay = document.getElementById('processingOverlay');
+
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    overlay.classList.add('active');
+
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html?payment=success&plan=' + (plan || 'pro');
+                    }, 2000);
+                });
+            }
+
+            // Payment method toggles (UI only)
+            const methods = document.querySelectorAll('.payment-method');
+            methods.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    methods.forEach(m => m.classList.remove('active'));
+                    btn.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

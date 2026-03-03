@@ -1,0 +1,733 @@
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dashboard - EXA AI</title>
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <!-- Icons -->
+        <script src="https://unpkg.com/lucide@latest"></script>
+        <!-- CSS -->
+        <link rel="stylesheet" href="css/style.css">
+
+        <style>
+            .dashboard-layout {
+                display: flex;
+                min-height: 100vh;
+                background: var(--bg-dark);
+            }
+
+            /* Sidebar */
+            .sidebar {
+                width: 260px;
+                background: rgba(10, 10, 15, 0.95);
+                border-right: 1px solid var(--border-color);
+                display: flex;
+                flex-direction: column;
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                z-index: 40;
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar-header {
+                padding: 1.5rem;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .nav-items {
+                padding: 1.5rem 1rem;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .nav-item {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.75rem 1rem;
+                color: var(--text-muted);
+                border-radius: var(--radius-sm);
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .nav-item:hover,
+            .nav-item.active {
+                color: white;
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .nav-item.active {
+                background: rgba(79, 70, 229, 0.15);
+                color: var(--primary);
+                border-right: 3px solid var(--primary);
+                border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+            }
+
+            .sidebar-footer {
+                padding: 1.5rem;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .user-profile {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .avatar {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: var(--grad-primary);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                color: white;
+            }
+
+            /* Main Content */
+            .main-content {
+                flex: 1;
+                margin-left: 260px;
+                display: flex;
+                flex-direction: column;
+                min-height: 100vh;
+            }
+
+            .top-bar {
+                height: 70px;
+                padding: 0 2rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                border-bottom: 1px solid var(--border-color);
+                background: rgba(10, 10, 15, 0.8);
+                backdrop-filter: blur(10px);
+                position: sticky;
+                top: 0;
+                z-index: 30;
+            }
+
+            .mobile-toggle {
+                display: none;
+                background: none;
+                border: none;
+                color: white;
+                cursor: pointer;
+            }
+
+            .view-section {
+                display: none;
+                padding: 2rem;
+                animation: fadeIn 0.3s ease;
+            }
+
+            .view-section.active {
+                display: block;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            /* View Specific Styles */
+            .stat-card {
+                padding: 1.5rem;
+                display: flex;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .stat-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: var(--radius-sm);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* Bot Editor Elements */
+            .editor-container {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            @media (min-width: 1024px) {
+                .editor-container {
+                    grid-template-columns: 2fr 1fr;
+                }
+            }
+
+            .chat-preview {
+                background: rgba(0, 0, 0, 0.3);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-md);
+                height: 500px;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .preview-header {
+                padding: 1rem;
+                border-bottom: 1px solid var(--border-color);
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                background: rgba(255, 255, 255, 0.02);
+                border-radius: var(--radius-md) var(--radius-md) 0 0;
+            }
+
+            .preview-body {
+                flex: 1;
+                padding: 1rem;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .msg-bubble {
+                max-width: 80%;
+                padding: 0.75rem 1rem;
+                border-radius: 1rem;
+                font-size: 0.875rem;
+            }
+
+            .msg-bot {
+                background: var(--bg-card);
+                border: 1px solid var(--border-color);
+                align-self: flex-start;
+                border-bottom-left-radius: 0;
+            }
+
+            .msg-user {
+                background: var(--primary);
+                color: white;
+                align-self: flex-end;
+                border-bottom-right-radius: 0;
+            }
+
+            /* Forms in Dashboard */
+            .dash-form-group {
+                margin-bottom: 1.5rem;
+            }
+
+            .dash-input,
+            .dash-textarea,
+            .dash-select {
+                width: 100%;
+                padding: 0.75rem 1rem;
+                background: rgba(0, 0, 0, 0.2);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-sm);
+                color: white;
+                font-family: inherit;
+            }
+
+            .dash-textarea {
+                resize: vertical;
+                min-height: 100px;
+            }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                }
+
+                .sidebar.mobile-open {
+                    transform: translateX(0);
+                }
+
+                .main-content {
+                    margin-left: 0;
+                }
+
+                .mobile-toggle {
+                    display: block;
+                }
+
+                .view-section {
+                    padding: 1rem;
+                }
+            }
+
+            /* Success Banner */
+            .success-banner {
+                display: none;
+                background: rgba(16, 185, 129, 0.1);
+                border: 1px solid rgba(16, 185, 129, 0.2);
+                color: var(--success);
+                padding: 1rem;
+                border-radius: var(--radius-sm);
+                margin-bottom: 1.5rem;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .success-banner.active {
+                display: flex;
+            }
+        </style>
+    </head>
+
+    <body class="dark-theme">
+
+        <div class="dashboard-layout">
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <a href="index.html" class="logo text-xl">
+                        <i data-lucide="bot" class="logo-icon"></i>
+                        EXA <span>AI</span>
+                    </a>
+                </div>
+
+                <div class="nav-items" id="sidebarNav">
+                    <div class="nav-item active" data-target="overview">
+                        <i data-lucide="layout-dashboard"></i> Overview
+                    </div>
+                    <div class="nav-item" data-target="chatbot">
+                        <i data-lucide="message-square"></i> My Chatbot
+                    </div>
+                    <div class="nav-item" data-target="analytics">
+                        <i data-lucide="bar-chart-2"></i> Analytics
+                    </div>
+                    <div class="nav-item" data-target="settings">
+                        <i data-lucide="settings"></i> Settings
+                    </div>
+                    <div class="nav-item" data-target="billing">
+                        <i data-lucide="credit-card"></i> Billing
+                    </div>
+                </div>
+
+                <div class="sidebar-footer">
+                    <div class="user-profile mb-4">
+                        <div class="avatar">JD</div>
+                        <div>
+                            <div class="font-bold text-sm">Jane Doe</div>
+                            <div class="text-xs text-gray">Pro Plan</div>
+                        </div>
+                    </div>
+                    <a href="#" id="logoutBtn" class="nav-item p-0 text-sm hover:text-danger"></a>
+                        <i data-lucide="log-out" style="width: 16px;"></i> Logout
+                    </a>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content relative overflow-hidden">
+                <!-- Background glow -->
+                <div class="glow-blob blob-2" style="top: -100px; right: 20%; opacity: 0.1;"></div>
+
+                <header class="top-bar">
+                    <div class="flex items-center gap-4">
+                        <button class="mobile-toggle"><i data-lucide="menu"></i></button>
+                        <h2 class="font-bold text-lg" id="topBarTitle">Overview</h2>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="badge bg-green/10 text-green border-green font-normal flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-green inline-block"></span> Bot Active
+                        </span>
+                        <a href="chat.html" class="btn btn-primary btn-sm" target="_blank">
+                            Open Chat
+                        </a>
+                    </div>
+                </header>
+
+                <!-- Success Payment Banner -->
+                <div class="p-8 pb-0">
+                    <div class="success-banner" id="paymentSuccessBanner">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="check-circle"></i>
+                            <span>Payment successful! Your account has been upgraded.</span>
+                        </div>
+                        <button class="text-gray hover:text-white" onclick="this.parentElement.style.display='none'">
+                            <i data-lucide="x" style="width: 16px;"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- View: OVERVIEW -->
+                <section class="view-section active" id="view-overview">
+                    <h1 class="text-2xl font-bold mb-6">Welcome back, Jane</h1>
+
+                    <div class="grid grid-cols-1 md-cols-3 gap-6 mb-8">
+                        <div class="stat-card glass-card">
+                            <div class="stat-icon bg-blue/10 text-blue"><i data-lucide="message-square"></i></div>
+                            <div>
+                                <div class="text-gray text-sm mb-1">Total Messages</div>
+                                <div class="text-2xl font-bold">4,289</div>
+                                <div class="text-xs text-green mt-1 flex items-center gap-1"><i data-lucide="arrow-up-right"
+                                        style="width: 12px;"></i> +12% this week</div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-card">
+                            <div class="stat-icon bg-purple/10 text-purple"><i data-lucide="users"></i></div>
+                            <div>
+                                <div class="text-gray text-sm mb-1">Unique Users</div>
+                                <div class="text-2xl font-bold">1,045</div>
+                                <div class="text-xs text-green mt-1 flex items-center gap-1"><i data-lucide="arrow-up-right"
+                                        style="width: 12px;"></i> +5% this week</div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-card">
+                            <div class="stat-icon bg-green/10 text-green"><i data-lucide="check-circle"></i></div>
+                            <div>
+                                <div class="text-gray text-sm mb-1">Resolution Rate</div>
+                                <div class="text-2xl font-bold">94.2%</div>
+                                <div class="text-xs text-green mt-1 flex items-center gap-1"><i data-lucide="arrow-up-right"
+                                        style="width: 12px;"></i> +2% this week</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md-cols-2 gap-8">
+                        <div class="glass-card">
+                            <h3 class="font-bold mb-4 border-b border-white/5 pb-2">Recent Activity</h3>
+                            <div class="flex flex-col gap-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 bg-blue rounded-full"></div>
+                                    <div class="flex-1 text-sm">User asked about pricing</div>
+                                    <div class="text-xs text-gray">2 min ago</div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 bg-blue rounded-full"></div>
+                                    <div class="flex-1 text-sm">User requested human agent</div>
+                                    <div class="text-xs text-gray">15 min ago</div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 bg-green rounded-full"></div>
+                                    <div class="flex-1 text-sm">Bot resolved password reset query</div>
+                                    <div class="text-xs text-gray">1 hour ago</div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 bg-purple rounded-full"></div>
+                                    <div class="flex-1 text-sm">New intent discovered: "Refunds"</div>
+                                    <div class="text-xs text-gray">3 hours ago</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold mb-4 border-b border-white/5 pb-2">Plan Usage</h3>
+                                <div class="mb-4">
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-gray">Messages</span>
+                                        <span>4,289 / 10,000</span>
+                                    </div>
+                                    <div class="w-full bg-white/10 rounded-full h-2">
+                                        <div class="bg-primary h-2 rounded-full" style="width: 42%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-gray">Active Bots</span>
+                                        <span>2 / 5</span>
+                                    </div>
+                                    <div class="w-full bg-white/10 rounded-full h-2">
+                                        <div class="bg-indigo h-2 rounded-full" style="width: 40%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="#" class="btn btn-secondary w-full justify-center mt-6">Upgrade Plan</a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- View: MY CHATBOT -->
+                <section class="view-section" id="view-chatbot">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-2xl font-bold">Configure Chatbot</h1>
+                        <button class="btn btn-primary shadow-glow flex items-center gap-2">
+                            <i data-lucide="save" style="width: 16px;"></i> Save Changes
+                        </button>
+                    </div>
+
+                    <div class="editor-container">
+                        <!-- Left: Settings Form -->
+                        <div class="glass-card">
+                            <h3 class="font-bold mb-4 border-b border-white/5 pb-2">Bot Behavior & Prompts</h3>
+
+                            <div class="dash-form-group">
+                                <label class="form-label">Bot Personality / System Prompt</label>
+                                <textarea
+                                    class="dash-textarea">You are EXA Bot, a helpful, professional, and friendly customer support assistant for EXA AI. Your goal is to help users understand our products, pricing, and provide technical guidance. Always be concise and polite.</textarea>
+                                <p class="text-xs text-gray mt-1">This defines how the AI behaves and responds generally.
+                                </p>
+                            </div>
+
+                            <div class="dash-form-group">
+                                <label class="form-label">Welcome Message</label>
+                                <input type="text" class="dash-input"
+                                    value="Hi there! 👋 I'm EXA Bot. How can I help you today?">
+                            </div>
+
+                            <h3 class="font-bold mb-4 mt-8 border-b border-white/5 pb-2">Appearance</h3>
+
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="form-label">Bot Name</label>
+                                    <input type="text" class="dash-input" value="EXA Support">
+                                </div>
+                                <div>
+                                    <label class="form-label">Color Theme</label>
+                                    <select class="dash-select">
+                                        <option>Indigo (Default)</option>
+                                        <option>Ocean Blue</option>
+                                        <option>Emerald Green</option>
+                                        <option>Midnight Dark</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="dash-form-group">
+                                <label class="form-label">Avatar</label>
+                                <div class="flex items-center gap-4">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-primary flex items-center justify-center border-2 border-white/10 text-white font-bold">
+                                        <i data-lucide="bot"></i>
+                                    </div>
+                                    <button class="btn btn-secondary btn-sm">Upload Image</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Preview -->
+                        <div>
+                            <h3 class="font-bold mb-4 pl-2">Live Preview</h3>
+                            <div class="chat-preview relative">
+                                <div class="preview-header">
+                                    <div
+                                        class="w-8 h-8 rounded-full bg-primary flex items-center justify-center border border-white/10 text-xs font-bold shadow-glow">
+                                        <i data-lucide="bot" style="width: 16px;"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-sm">EXA Support</div>
+                                        <div class="text-xs text-green flex items-center gap-1">
+                                            <div class="w-2 h-2 rounded-full bg-green bg-pulse"></div> Online
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="preview-body">
+                                    <div class="msg-bubble msg-bot">Hi there! 👋 I'm EXA Bot. How can I help you today?
+                                    </div>
+                                    <div class="msg-bubble msg-user">Can you tell me about pricing?</div>
+                                    <div class="msg-bubble msg-bot">Sure! We offer three plans: Starter (Free), Pro
+                                        ($49/mo), and Business ($199/mo). What features are you looking for?</div>
+                                </div>
+                                <div class="p-3 border-t border-white/10 flex gap-2 bg-[rgba(255,255,255,0.02)]">
+                                    <input type="text"
+                                        class="flex-1 bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white"
+                                        placeholder="Type your message..." disabled>
+                                    <button class="btn btn-primary p-2" disabled><i data-lucide="send"
+                                            style="width: 16px;"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- View: ANALYTICS -->
+                <section class="view-section" id="view-analytics">
+                    <h1 class="text-2xl font-bold mb-6">Analytics Dashboard</h1>
+                    <div class="glass-card mb-6"
+                        style="height: 300px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                        <i data-lucide="bar-chart-2" class="text-gray mb-4"
+                            style="width: 64px; height: 64px; opacity: 0.2;"></i>
+                        <p class="text-gray">Detailed chart UI would render here</p>
+                        <p class="text-xs text-primary mt-2">Showing data for the last 30 days</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md-cols-2 gap-6">
+                        <div class="glass-card">
+                            <h3 class="font-bold mb-4 border-b border-white/5 pb-2">Top User Intents</h3>
+                            <ul class="flex flex-col gap-3 text-sm">
+                                <li class="flex justify-between items-center"><span class="text-gray">Pricing
+                                        Inquiries</span> <span class="badge bg-white/5">45%</span></li>
+                                <li class="flex justify-between items-center"><span class="text-gray">Technical
+                                        Support</span> <span class="badge bg-white/5">25%</span></li>
+                                <li class="flex justify-between items-center"><span class="text-gray">Feature
+                                        Requests</span> <span class="badge bg-white/5">15%</span></li>
+                                <li class="flex justify-between items-center"><span class="text-gray">Sales Contact</span>
+                                    <span class="badge bg-white/5">10%</span>
+                                </li>
+                                <li class="flex justify-between items-center"><span class="text-gray">Other</span> <span
+                                        class="badge bg-white/5">5%</span></li>
+                            </ul>
+                        </div>
+                        <div class="glass-card">
+                            <h3 class="font-bold mb-4 border-b border-white/5 pb-2">Average Response Metrics</h3>
+                            <ul class="flex flex-col gap-3 text-sm">
+                                <li class="flex justify-between items-center"><span class="text-gray">Time to First
+                                        Reply</span> <span class="font-bold">0.8s</span></li>
+                                <li class="flex justify-between items-center"><span class="text-gray">Avg Conversation
+                                        Length</span> <span class="font-bold">4 messages</span></li>
+                                <li class="flex justify-between items-center"><span class="text-gray">User Satisfaction
+                                        (CSAT)</span> <span class="font-bold text-green">4.8 / 5.0</span></li>
+                                <li class="flex justify-between items-center"><span class="text-gray">Human Handoff
+                                        Rate</span> <span class="font-bold text-yellow">5.8%</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- View: SETTINGS -->
+                <section class="view-section" id="view-settings">
+                    <h1 class="text-2xl font-bold mb-6">Account Settings</h1>
+                    <div class="glass-card max-w-2xl">
+                        <div class="dash-form-group">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="dash-input" value="Jane Doe">
+                        </div>
+                        <div class="dash-form-group">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="dash-input" value="jane@company.com" disabled>
+                            <p class="text-xs text-gray mt-1">Contact support to change your primary email.</p>
+                        </div>
+                        <div class="dash-form-group">
+                            <label class="form-label">Company Name</label>
+                            <input type="text" class="dash-input" value="TechNova Inc.">
+                        </div>
+
+                        <hr class="border-white/5 my-6">
+
+                        <h3 class="font-bold mb-4">Security</h3>
+                        <button class="btn btn-secondary border border-white/10 mb-2 w-full justify-start"><i
+                                data-lucide="key" style="width: 16px; margin-right: 8px;"></i> Change Password</button>
+                        <button class="btn btn-secondary border border-white/10 w-full justify-start"><i
+                                data-lucide="shield" style="width: 16px; margin-right: 8px;"></i> Enable Two-Factor
+                            Auth</button>
+
+                        <div class="mt-8 flex justify-end">
+                            <button class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- View: BILLING -->
+                <section class="view-section" id="view-billing">
+                    <h1 class="text-2xl font-bold mb-6">Billing & Usage</h1>
+
+                    <div class="glass-card mb-8">
+                        <div
+                            class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/5 pb-4 mb-4 gap-4">
+                            <div>
+                                <h3 class="font-bold">Current Plan: Pro</h3>
+                                <p class="text-sm text-gray">Billed monthly. Next payment due Nov 15, 2026.</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold">$49.00<span class="text-sm font-normal text-gray"> /
+                                        mo</span></div>
+                                <div class="flex gap-2 mt-2">
+                                    <a href="checkout.html?plan=business" class="btn btn-primary btn-sm">Upgrade</a>
+                                    <button class="btn btn-ghost btn-sm">Cancel Plan</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-2">
+                            <h4 class="font-bold text-sm mb-2">Usage Cycle</h4>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray">Messages used</span>
+                                <span>4,289 / 10,000 (42%)</span>
+                            </div>
+                            <div class="w-full bg-white/10 rounded-full h-2">
+                                <div class="bg-primary h-2 rounded-full" style="width: 42%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold">Payment Methods</h3>
+                            <button class="btn btn-ghost btn-sm flex items-center"><i data-lucide="plus"
+                                    style="width: 16px;"></i> Add Method</button>
+                        </div>
+                        <div
+                            class="bg-[rgba(255,255,255,0.02)] border border-white/10 rounded p-4 flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="credit-card" class="text-primary"></i>
+                                <div>
+                                    <div class="font-bold text-sm">Visa ending in 4242</div>
+                                    <div class="text-xs text-gray">Expires 12/28</div>
+                                </div>
+                            </div>
+                            <div class="badge">Default</div>
+                        </div>
+
+                        <h3 class="font-bold mt-8 mb-4">Invoices</h3>
+                        <table class="w-full text-left text-sm">
+                            <thead class="text-gray border-b border-white/5">
+                                <tr>
+                                    <th class="pb-2 font-normal">Date</th>
+                                    <th class="pb-2 font-normal">Amount</th>
+                                    <th class="pb-2 font-normal">Status</th>
+                                    <th class="pb-2 font-normal text-right">Invoice</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5">
+                                <tr>
+                                    <td class="py-3">Oct 15, 2026</td>
+                                    <td class="py-3">$49.00</td>
+                                    <td class="py-3"><span
+                                            class="badge bg-green/10 text-green border-green font-normal text-xs px-2">Paid</span>
+                                    </td>
+                                    <td class="py-3 text-right"><button class="btn btn-ghost btn-sm"><i
+                                                data-lucide="download" style="width: 14px;"></i></button></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3">Sep 15, 2026</td>
+                                    <td class="py-3">$49.00</td>
+                                    <td class="py-3"><span
+                                            class="badge bg-green/10 text-green border-green font-normal text-xs px-2">Paid</span>
+                                    </td>
+                                    <td class="py-3 text-right"><button class="btn btn-ghost btn-sm"><i
+                                                data-lucide="download" style="width: 14px;"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- Initialize Lucide Icons -->
+        <script>
+            lucide.createIcons();
+        </script>
+
+    <script type="module">
+    import { protectPage } from "./js/auth-guard.js";
+    protectPage();
+    </script>
+
+        <script src="js/dashboard.js"></script>
+    </body>
+
+
+    </html>
