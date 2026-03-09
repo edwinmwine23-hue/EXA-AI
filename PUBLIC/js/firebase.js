@@ -4,7 +4,7 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyAHu-Xon6UvkBVQvA-kXmJ3-oDuIQNvKHM",
+  
     authDomain: "exa-ai-967ed.firebaseapp.com",
     projectId: "exa-ai-967ed",
     storageBucket: "exa-ai-967ed.firebasestorage.app",
